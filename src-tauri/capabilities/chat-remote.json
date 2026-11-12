@@ -1,0 +1,23 @@
+{
+  "identifier": "chat-remote-bridge",
+  "description": "IPC access for the WhatsApp Web origin inside the chat panel. The page layer runs in a remote origin, so Tauri requires every command it calls to be listed here; core:default alone is not enough.",
+  "windows": [
+    "chat"
+  ],
+  "remote": {
+    "urls": [
+      "https://web.whatsapp.com/*",
+      "https://*.whatsapp.com/*"
+    ]
+  },
+  "permissions": [
+    "core:default",
+    "allow-read-config",
+    "allow-store-config",
+    "allow-report-unread",
+    "allow-flip-blur",
+    "allow-apply-zoom",
+    "allow-push-notice",
+    "notification:default"
+  ]
+}

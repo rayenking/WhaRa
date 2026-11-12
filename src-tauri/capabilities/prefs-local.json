@@ -1,0 +1,14 @@
+{
+  "identifier": "prefs-local-bridge",
+  "description": "IPC access for the local preferences panel. Once the app declares its own ACL manifest every command needs an explicit entry, so these are listed even though the window is local.",
+  "windows": ["prefs"],
+  "permissions": [
+    "core:default",
+    "allow-read-config",
+    "allow-store-config",
+    "allow-build-info",
+    "allow-update-status",
+    "allow-check-update",
+    "allow-open-release"
+  ]
+}

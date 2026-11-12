@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WhaRa Preferences</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --ink: #16181d;
+        --faint: #70757e;
+        --edge: rgba(0, 0, 0, 0.09);
+        --panel: #fff;
+        --brand: #2ad46b;
+        --radius: 13px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #eef0f4;
+          --faint: #9aa0ab;
+          --edge: rgba(255, 255, 255, 0.11);
+          --panel: #1b1d22;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+
+      body {
+        padding: 24px 24px 30px;
+        color: var(--ink);
+        font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        -webkit-user-select: none;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+
+      header p {
+        margin: 3px 0 22px;
+        color: var(--faint);
+        font-size: 12px;
+      }
+
+      .card {
+        margin-bottom: 18px;
+        padding: 2px 15px;
+        background: var(--panel);
+        border: 1px solid var(--edge);
+        border-radius: var(--radius);
+      }
+
+      .setting {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-top: 1px solid var(--edge);
+      }
+
+      .setting:first-child {
+        border-top: 0;
+      }
+
+      .setting strong {
+        display: block;
+        font-weight: 500;
+      }
+
+      .setting small {
+        color: var(--faint);
+        font-size: 11.5px;
+      }
+
+      .setting input[type="checkbox"] {
+        width: 40px;
+        height: 23px;
+        accent-color: var(--brand);
+      }
+
+      .setting input[type="range"] {
+        width: 158px;
+        accent-color: var(--brand);
+      }
+
+      .setting input[type="text"] {
+        width: 168px;
+        padding: 6px 9px;
+        color: var(--ink);
+        font: inherit;
+        background: transparent;
+        border: 1px solid var(--edge);
+        border-radius: 8px;
+      }
+
+      .readout {
+        min-width: 48px;
+        color: var(--faint);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      footer {
+        color: var(--faint);
+        font-size: 11.5px;
+        text-align: center;
+      }
+
+      .stamp {
+        color: var(--brand);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      .stamp.lit {
+        opacity: 1;
+      }
+
+      .update-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 0;
+        border-top: 1px solid var(--edge);
+      }
+
+      .update-row:first-child {
+        border-top: 0;
+      }
+
+      .update-row .grow {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .update-row strong {
+        display: block;
+        font-weight: 500;
+      }
+
+      .update-row small {
+        display: block;
+        color: var(--faint);
+        font-size: 11.5px;
+      }
+
+      button {
+        padding: 6px 13px;
+        color: var(--ink);
+        font: inherit;
+        background: transparent;
+        border: 1px solid var(--edge);
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: var(--brand);
+      }
+
+      button[disabled] {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 7px;
+        color: #0b2b16;
+        font-size: 10.5px;
+        background: var(--brand);
+        border-radius: 999px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>WhaRa</h1>
+      <p>WhatsApp Web as a native macOS client.</p>    </header>
+
+    <div class="card">
+      <label class="setting">
+        <span>
+          <strong>Interface scale</strong>
+          <small>Enlarge or shrink the WhatsApp layout</small>
+        </span>
+        <input id="zoom" type="range" min="0.6" max="2" step="0.05" />
+        <span class="readout" id="zoomReadout">1.00×</span>
+      </label>
+
+      <label class="setting">
+        <span>
+          <strong>Privacy veil</strong>
+          <small>Blur messages while the window is in the background</small>
+        </span>
+        <input id="privacyBlur" type="checkbox" />
+      </label>
+
+      <label class="setting">
+        <span>
+          <strong>Veil shortcut</strong>
+          <small>System-wide key combo, e.g. CmdOrCtrl+Shift+B</small>
+        </span>
+        <input id="blurHotkey" type="text" spellcheck="false" />
+      </label>
+    </div>
+
+    <div class="card">
+      <label class="setting">
+        <span>
+          <strong>Menubar counter</strong>
+          <small>Show unread total next to the glyph</small>
+        </span>
+        <input id="trayCounter" type="checkbox" />
+      </label>
+
+      <label class="setting">
+        <span>
+          <strong>Keep running when closed</strong>
+          <small>Stay in the menu bar instead of quitting</small>
+        </span>
+        <input id="keepRunningOnClose" type="checkbox" />
+      </label>
+
+      <label class="setting">
+        <span>
+          <strong>Open at login</strong>
+          <small>Launch WhaRa with the user session</small>
+        </span>
+        <input id="launchAtLogin" type="checkbox" />
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="update-row">
+        <span class="grow">
+          <strong>Version <span id="currentVersion">—</span></strong>
+          <small id="updateDetail">Checking for updates…</small>
+        </span>
+        <button id="checkNow" type="button">Check now</button>
+        <button id="openRelease" type="button" hidden>Release page</button>
+      </div>
+    </div>
+
+    <footer>
+      WhaRa <span id="build">0.1.0</span> ·
+      <span class="stamp" id="stamp">saved</span>
+    </footer>
+
+    <script>
+      const talk = (name, payload) => globalThis.__TAURI__.core.invoke(name, payload);
+
+      const lookup = (id) => document.getElementById(id);
+      let model = null;
+      let pending = 0;
+      let flash = 0;
+
+      const paint = () => {
+        lookup("zoom").value = model.zoom;
+        lookup("zoomReadout").textContent = `${Number(model.zoom).toFixed(2)}×`;
+        lookup("privacyBlur").checked = Boolean(model.privacyBlur);
+        lookup("blurHotkey").value = model.blurHotkey;
+        lookup("trayCounter").checked = Boolean(model.trayCounter);
+        lookup("keepRunningOnClose").checked = Boolean(model.keepRunningOnClose);
+        lookup("launchAtLogin").checked = Boolean(model.launchAtLogin);
+      };
+
+      const confirm = () => {
+        lookup("stamp").classList.add("lit");
+        clearTimeout(flash);
+        flash = setTimeout(() => lookup("stamp").classList.remove("lit"), 850);
+      };
+
+      const commit = (changes) => {
+        Object.assign(model, changes);
+        clearTimeout(pending);
+        pending = setTimeout(async () => {
+          model = await talk("store_config", { patch: changes });
+          paint();
+          confirm();
+        }, 130);
+      };
+
+      lookup("zoom").addEventListener("input", (event) => {
+        const zoom = Number(event.target.value);
+        lookup("zoomReadout").textContent = `${zoom.toFixed(2)}×`;
+        commit({ zoom });
+      });
+
+      lookup("privacyBlur").addEventListener("change", (event) =>
+        commit({ privacyBlur: event.target.checked }),
+      );
+      lookup("blurHotkey").addEventListener("change", (event) =>
+        commit({ blurHotkey: event.target.value }),
+      );
+      lookup("trayCounter").addEventListener("change", (event) =>
+        commit({ trayCounter: event.target.checked }),
+      );
+      lookup("keepRunningOnClose").addEventListener("change", (event) =>
+        commit({ keepRunningOnClose: event.target.checked }),
+      );
+      lookup("launchAtLogin").addEventListener("change", (event) =>
+        commit({ launchAtLogin: event.target.checked }),
+      );
+
+      globalThis.__TAURI__.event.listen("preferences-updated", (event) => {
+        model = event.payload;
+        paint();
+      });
+
+      // ---- updates -------------------------------------------------------
+
+      const detail = lookup("updateDetail");
+      const checkButton = lookup("checkNow");
+      const releaseButton = lookup("openRelease");
+      let update = null;
+
+      const paintUpdate = () => {
+        if (!update) {
+          detail.textContent = "No update information yet.";
+          return;
+        }
+        lookup("currentVersion").textContent = update.current;
+
+        if (update.error) {
+          detail.textContent = `Check failed: ${update.error}`;
+          releaseButton.hidden = true;
+          return;
+        }
+
+        if (update.available && update.latest) {
+          detail.innerHTML = `Version ${update.latest} is available <span class="badge">new</span>`;
+          releaseButton.hidden = !update.page;
+          return;
+        }
+
+        if (update.latest) {
+          detail.textContent = `Up to date (latest ${update.latest}).`;
+          releaseButton.hidden = !update.page;
+          return;
+        }
+
+        detail.textContent = "Checking for updates…";
+        releaseButton.hidden = true;
+      };
+
+      checkButton.addEventListener("click", async () => {
+        checkButton.disabled = true;
+        detail.textContent = "Checking…";
+        try {
+          update = await talk("check_update");
+        } catch (error) {
+          detail.textContent = `Check failed: ${error}`;
+        } finally {
+          checkButton.disabled = false;
+          paintUpdate();
+        }
+      });
+
+      releaseButton.addEventListener("click", () => {
+        if (update?.page) talk("open_release", { url: update.page });
+      });
+
+      globalThis.__TAURI__.event.listen("update-status", (event) => {
+        update = event.payload;
+        paintUpdate();
+      });
+
+      (async () => {
+        // Each panel is independent: one failing call must not stop the rest
+        // from filling in.
+        try {
+          const [value, banner] = await Promise.all([
+            talk("read_config"),
+            talk("build_info"),
+          ]);
+
+          if (value) {
+            model = value;
+            paint();
+          }
+
+          if (banner?.version) {
+            lookup("currentVersion").textContent = banner.version;
+            lookup("build").textContent = banner.version;
+          }
+        } catch (error) {
+          console.error("preferences load failed", error);
+        }
+
+        try {
+          update = await talk("update_status");
+          paintUpdate();
+        } catch (error) {
+          console.error("update status failed", error);
+        }
+
+        // Refresh once on open so the panel is never stale.
+        talk("check_update")
+          .then((value) => {
+            update = value;
+            paintUpdate();
+          })
+          .catch(() => {});
+      })();
+    </script>
+  </body>
+</html>

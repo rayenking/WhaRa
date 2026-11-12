@@ -1,0 +1,17 @@
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+# Release tuning: smallest sensible native binary.
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = "s"
+strip = "symbols"
+panic = "abort"
+incremental = false
+
+# Dev builds keep debug info for `cargo run`.
+[profile.dev]
+opt-level = 0
+debug = true
