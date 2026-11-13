@@ -1,171 +1,216 @@
-# WhaRa
+<p align="center">
+  <img src="src-tauri/icons/icon.png" width="100" height="100" alt="WhaRa app icon" />
+</p>
 
-**The original WhatsApp Web, in a lightweight native macOS window.**  
-Rust · Tauri 2 · WKWebView · macOS 12+
+<h1 align="center">WhaRa</h1>
 
-WhaRa keeps the familiar WhatsApp Web experience and adds a macOS-friendly shell, a compact single-pane layout, and a few convenient UI controls. It is built for people who want to use WhatsApp Web in its own desktop window without Electron.
+<p align="center"><strong>The original WhatsApp Web, with a native macOS feel.</strong></p>
+
+<p align="center">
+  A lightweight macOS app that wraps the real WhatsApp Web in WKWebView, adds a Telegram-inspired compact layout, and integrates with your Mac. No Electron, no unofficial WhatsApp client library.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rayenking/WhaRa/actions/workflows/ci.yml"><img src="https://github.com/rayenking/WhaRa/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+  <a href="https://github.com/rayenking/WhaRa/releases/latest"><img src="https://img.shields.io/github/v/release/rayenking/WhaRa" alt="Latest release" /></a>
+  <a href="https://github.com/rayenking/WhaRa/releases"><img src="https://img.shields.io/github/downloads/rayenking/WhaRa/total" alt="Downloads" /></a>
+  <img src="https://img.shields.io/badge/platform-macOS%2012%2B-lightgrey" alt="macOS 12 or later" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/rayenking/WhaRa/releases/latest">Download</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#build-from-source">Build from source</a> ·
+  <a href="https://github.com/rayenking/WhaRa/issues">Report an issue</a>
+</p>
+
+## Why WhaRa?
+
+WhatsApp Web works in a browser, but you may want a dedicated window that feels at home on your Mac—especially when you keep messaging beside other apps.
+
+- **Real WhatsApp Web.** WhaRa opens [web.whatsapp.com](https://web.whatsapp.com/) directly. WhatsApp handles QR login, messages, groups, media, and supported calls.
+- **Not an unofficial WhatsApp client.** No alternative messaging library, reverse-engineered WhatsApp protocol, or separate backend. WhaRa only injects UI enhancements and connects macOS features.
+- **Compact when you need it.** A Telegram-inspired single-pane layout helps the chat list and conversation fit into a smaller window.
+- **A proper Mac window.** Menu-bar controls, unread counts, notifications, global shortcut, window restoration, and launch at login.
+- **Small and open source.** Rust + Tauri 2 + the system WKWebView, not a bundled Electron/Chromium runtime.
+
+WhaRa is an **independent third-party app**, not an official WhatsApp or Meta product, and is not affiliated with or endorsed by either company.
+
+## A look around
 
 | Compact chat list | Compact conversation |
 | :---: | :---: |
-| <img src="docs/screenshots/compact-chat-list-demo.png" alt="WhaRa compact chat list with synthetic contacts, chat previews and unread counts" width="300"> | <img src="docs/screenshots/compact-stella-demo.png" alt="WhaRa compact Stella (You) conversation with synthetic demo messages" width="300"> |
+| <img src="docs/screenshots/compact-chat-list-demo.png" alt="WhaRa compact chat list with fictional demo contacts" width="320" /> | <img src="docs/screenshots/compact-stella-demo.png" alt="WhaRa compact conversation with synthetic Stella (You) messages" width="320" /> |
+| Chat previews, filters, and sidebar | One chat at a time, with familiar WhatsApp actions |
 
-<p align="center"><sub>Compact mode (470 × 740 window). Both screenshots are staged illustrative previews. <strong>All names, avatars, messages, timestamps and unread counts are synthetic</strong> — no private conversations or contacts are published.</sub></p>
-
-## Download for macOS
-
-**[Download the latest WhaRa release](https://github.com/rayenking/WhaRa/releases/latest)** — no Rust toolchain or manual build required.
-
-Choose the installer that matches your Mac:
-
-- **Apple Silicon (M1/M2/M3/M4/...)**: `WhaRa_vX.Y.Z_apple-silicon.dmg`
-- **Intel Mac**: `WhaRa_vX.Y.Z_intel.dmg`
-
-Open the downloaded DMG and drag **WhaRa.app** into Applications. A zipped `.app` is also provided for each architecture, along with SHA-256 checksums. **From WhaRa v0.2.0 onward, later updates can be installed directly in the app**; v0.1.0 needs a one-time manual installation of a v0.2.0-or-newer release.
-
-**macOS security notice:** Current downloads use **ad-hoc signatures, not Apple Developer ID notarization**. macOS Gatekeeper may ask you to approve opening the app in **System Settings → Privacy & Security**. Only download from the repository's official Releases page and verify the checksum if desired.
-
-## Original WhatsApp Web — not an unofficial WhatsApp library
-
-**WhaRa loads [web.whatsapp.com](https://web.whatsapp.com/) directly in macOS WKWebView.** WhatsApp Web itself handles login, QR linking, conversations, media, and supported calling features.
-
-- **No unofficial WhatsApp client library**, reverse-engineered messaging protocol, or alternative WhatsApp backend.
-- **No reimplementation of the chat engine.** WhaRa applies scoped, reversible JavaScript/CSS UI enhancements to the WhatsApp Web page and bridges certain desktop features to native Rust/Tauri functionality.
-- Native WhatsApp controls still perform the actual WhatsApp actions. For example, the combined Voice/Video menu forwards clicks to WhatsApp's own call buttons.
-
-This is an **independent third-party macOS wrapper**, not an official WhatsApp or Meta application, and is not affiliated with or endorsed by either company.
+<p align="center"><sub>Shown at approximately 470 × 740. <strong>Both screenshots use synthetic demo names, avatars, messages, timestamps, and unread counts.</strong> No personal conversations or contacts were included.</sub></p>
 
 ## Features
 
-### Compact / mobile-like layout
+### WhatsApp Web, kept original
 
-- **Responsive single-pane mode** below 800 CSS pixels: the chat list and the selected conversation take turns occupying the available space.
-- **470 × 740 minimum window size**, inspired by Telegram's compact window dimensions.
-- **Back-to-chats navigation** when viewing a conversation in compact mode.
-- **Compact Contact / Group info** that overlays the conversation instead of breaking the layout into oversized desktop panes.
-- **Media, Links & Docs** navigation inside the compact details view, plus support for WhatsApp's native photo viewer.
-- **Better chat width and message spacing** for narrow windows; full desktop layout remains available at larger sizes.
+- Sign in by scanning the QR code with WhatsApp on your phone.
+- Use WhatsApp Web's own conversations, groups, media, and supported controls.
+- WhaRa's injected JavaScript/CSS changes the **interface only**; it does not replace WhatsApp's messaging engine.
+- UI changes are designed to be scoped and reversible.
 
-### WhatsApp UI conveniences
+### Compact mode
 
-- **Combined call menu** with the original WhatsApp Voice and Video icons and their native actions.
-- **Add to list** shortcut moved to the sidebar for compact navigation, with the native list menu opening alongside it.
-- **Original WhatsApp Media sidebar action** retained.
-- Changes are restricted to the UI layer; WhatsApp's message list and native actions remain owned by WhatsApp Web.
+- Responsive single-pane navigation below approximately 800 CSS pixels, with a **470 × 740 minimum window**.
+- Chat list and conversation adapt when you resize the window.
+- Back button to return to the chat list.
+- Contact and group details, plus **Media, Links & Docs**, work in the compact layout.
+- Conversation bubbles and spacing are adjusted for narrow windows.
+- Sidebar access to **Add to list** and WhatsApp's media section.
+- Combined **Voice / Video** call dropdown, forwarding to the original WhatsApp actions.
 
-### macOS integrations
+### On your Mac
 
-- **Native WKWebView** shell using Rust and Tauri 2 — no Electron.
-- **Verified in-app updates (v0.2.0+)**: automatic checks after launch and every six hours; a native **Update / Later** popup; download progress, signature verification, installation and automatic app restart.
-- Choosing **Later** postpones the prompt for roughly 24 hours while allowing newer versions to appear immediately. Manual checks are available in Preferences.
-- **Menu-bar / tray access** with an unread counter and quick actions.
-- **Native notifications** bridged from WhatsApp Web to macOS Notification Center.
-- **Privacy veil** that can blur chat contents when the window is not focused, with a configurable global shortcut (default: Cmd+Shift+B).
-- **Native WebView zoom** from 0.6× to 2×, avoiding CSS zoom interference with WhatsApp's layouts.
-- **Launch at login**, **single instance**, **window geometry restoration**, and **keep running in the menu bar** when the chat window is closed.
-- **Preferences window** with auto-saved settings.
+- Native macOS WKWebView app; no Electron.
+- Menu-bar icon with unread counter and quick actions.
+- macOS notifications.
+- Optional privacy veil that blurs chats when the window is unfocused; default shortcut: **⌘ Shift B**.
+- Native WebView zoom (0.6×–2×), without CSS zoom hacks that disrupt virtualized lists.
+- Open at login, remember window geometry, and keep running in the menu bar after closing the chat window.
+- Separate Preferences window for desktop options.
 
-## Getting started
+### In-app updates (v0.2.0 and newer)
 
-**Requirements:** macOS 12+, a recent stable Rust toolchain (Rust 1.82 or newer), and Tauri CLI v2. You'll link your WhatsApp account through WhatsApp Web's own login flow.
+- Checks after launch and about every six hours.
+- An **Update / Later** dialog when a newer release is detected.
+- Clicking **Update** downloads the signed package, shows progress, installs it, and restarts WhaRa.
+- **Later** snoozes the prompt for around 24 hours; **Check now** is available in Preferences.
+- Updater archives are verified with a signing key before installation.
 
-Install the Tauri CLI if you don't already have it:
+## Install
 
-~~~bash
+Get WhaRa from the [latest GitHub release](https://github.com/rayenking/WhaRa/releases/latest):
+
+| Mac | Download |
+| --- | --- |
+| macOS 12+, Apple Silicon (M-series) | [`WhaRa_vX.Y.Z_apple-silicon.dmg`](https://github.com/rayenking/WhaRa/releases/latest) |
+| macOS 12+, Intel | [`WhaRa_vX.Y.Z_intel.dmg`](https://github.com/rayenking/WhaRa/releases/latest) |
+
+1. Download the **DMG** for your Mac.
+2. Open it and drag **WhaRa.app** into **Applications**.
+3. Open WhaRa and link your WhatsApp account with its QR code.
+
+The release also provides `.app.zip` downloads and `SHA256SUMS.txt` for verification. Files ending in `.app.tar.gz`, `.sig`, and `latest.json` are used by the in-app updater; **you don't need to download them manually**.
+
+> **Existing v0.1.0 users:** this version predates the in-app installer. Upgrade to **v0.2.0 or newer once via DMG**; subsequent releases can update within WhaRa. Check [Releases](https://github.com/rayenking/WhaRa/releases) for what's actually published.
+
+### The first launch
+
+**macOS:** WhaRa is currently ad-hoc signed but **not notarized by Apple**, so Gatekeeper may warn that Apple cannot check the app for malicious software.
+
+The recommended way to allow the app is:
+
+1. Try opening **WhaRa.app** from Applications once.
+2. Open **System Settings → Privacy & Security**.
+3. Scroll to **Security**, find the blocked WhaRa entry, and click **Open Anyway**.
+4. Confirm, then open WhaRa normally next time.
+
+Alternatively, if you **downloaded WhaRa from the official repository and trust the file**, you can remove macOS's downloaded-file quarantine attribute once in Terminal:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/WhaRa.app
+```
+
+This command **bypasses macOS's first-launch quarantine check** for that app. Use the **Open Anyway** method when possible; do not run the command for downloads from unknown sources.
+
+The QR sign-in screen is WhatsApp Web itself. On your phone, open **WhatsApp → Linked devices → Link a device** and scan the QR code.
+
+### Updates after installation
+
+From **v0.2.0 onward**, WhaRa checks GitHub Releases for newer signed versions. Choose **Update** to download, install, and reopen WhaRa, or **Later** to continue chatting. Automatic installation **never starts without your click**.
+
+For a manual check, use **WhaRa Preferences → Check now**. If an update cannot be downloaded or verified, your current app remains the version to use; check the official release page if you need a manual installer.
+
+## Troubleshooting
+
+- **macOS won't open the app:** follow [The first launch](#the-first-launch), then confirm the app was placed in `/Applications`.
+- **QR code or WhatsApp Web doesn't load:** check your connection, try re-opening WhaRa, and make sure your macOS version supports the current WhatsApp Web.
+- **The layout looks wrong:** resize the window to switch between compact and desktop views; WhatsApp may change its web interface independently, requiring UI compatibility fixes.
+- **Calling doesn't work:** WhaRa forwards to WhatsApp's native web controls. Actual calling availability depends on WhatsApp Web and WKWebView support.
+- **No update popup:** v0.1.0 needs a manual upgrade first. Debug/development builds don't run the production installer. Use Preferences → Check now on a packaged v0.2.0+ build.
+- **Update download or signature check fails:** do not install files from untrusted mirrors. Retry later or download the official DMG from [Releases](https://github.com/rayenking/WhaRa/releases).
+
+Found a reproducible bug? [Open an issue](https://github.com/rayenking/WhaRa/issues), ideally with the WhaRa version, macOS version, window dimensions, and **privacy-safe** screenshots (no real chats).
+
+## Build from source
+
+You'll need **macOS 12 or later**, **Rust 1.90+**, and **Tauri CLI v2**. Release installers are prebuilt; these steps are only for contributors or people building locally.
+
+```sh
+git clone https://github.com/rayenking/WhaRa.git
+cd WhaRa
+
 cargo install tauri-cli --version "^2" --locked
-~~~
-
-Run from the repository root:
-
-~~~bash
 cargo tauri dev --no-watch --config src-tauri/tauri.conf.json
-~~~
+```
 
-Or build a native executable:
+To compile the native Rust executable:
 
-~~~bash
+```sh
 cargo build --release --manifest-path src-tauri/Cargo.toml
-./target/release/whara
-~~~
+```
 
-To create a macOS app bundle on your own machine:
+Release packaging enables **signed updater artifacts** and therefore requires the private signing key. This is only needed by maintainers producing official updates—not by people running from source.
 
-~~~bash
-cargo tauri build --config src-tauri/tauri.conf.json
-~~~
+### Tests
 
-## CI/CD and releases
+```sh
+cargo fmt --manifest-path src-tauri/Cargo.toml --check
+cargo test --locked --manifest-path src-tauri/Cargo.toml
+python3 -m unittest discover -s scripts -p 'test_*.py'
+```
 
-GitHub Actions runs formatting checks, the Rust test suite and injected-JavaScript syntax checks on updates to `main` and pull requests. When a `vX.Y.Z` Git tag is pushed, the release workflow:
-
-1. Confirms the Git tag matches the Cargo and Tauri versions and runs tests.
-2. Builds macOS DMGs and ZIPs for **Apple Silicon** and **Intel**.
-3. Creates a signed `.app.tar.gz` updater archive and `.sig` for each architecture.
-4. Generates `latest.json` pointing to both signed updater archives, plus a `SHA256SUMS.txt` checksum file.
-5. Publishes the installers and signed updates in [GitHub Releases](https://github.com/rayenking/WhaRa/releases), **only after both architectures pass**.
-
-### Maintainer: secure update signing
-
-Tauri updater archives use a separate **minisign signature** in addition to the ad-hoc macOS app signature. The public verification key is embedded in `src-tauri/tauri.conf.json`. The private signing key must **never** be included in Git commits or downloadable artifacts.
-
-For this project, the original private key was generated locally at `~/.config/whara-updater/release.key`. Before creating the first signed GitHub release, the repository owner must add the contents of that file as a GitHub Actions repository secret named **`TAURI_SIGNING_PRIVATE_KEY`** (Settings → Secrets and variables → Actions). Keep a secure backup: losing the key prevents installed versions from trusting future updates. Do not generate a replacement key casually.
-
-Once the secret is configured, bump the versions in `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, push changes, and push a matching `vX.Y.Z` tag. The workflow builds signed archives and a static updater manifest automatically.
-
-The app bundle still uses ad-hoc macOS code signing, so a first install may require Gatekeeper confirmation. Update signatures prevent WhaRa from silently installing unsigned or improperly signed application updates.
+WhatsApp Web owns its DOM and may change it over time, so compact layout changes should also be checked in a running macOS WKWebView.
 
 ## How it works
 
-~~~text
-WhaRa (Rust / Tauri)
-└── macOS WKWebView ── https://web.whatsapp.com/
-    ├── WhatsApp Web's own chat, media, login, and controls
-    ├── whara-inject.js  — native notifications, unread title, privacy veil
-    └── whara-ui.js      — reversible compact layout and UI proxies
-~~~
+```text
+WhaRa (Rust / Tauri 2)
+├── macOS native window, tray, notifications, and preferences
+├── Signed in-app updater (local window only)
+└── WKWebView → https://web.whatsapp.com/
+    ├── Original WhatsApp Web messaging and controls
+    ├── whara-inject.js  → unread count, privacy, notifications
+    └── whara-ui.js      → reversible compact UI enhancements
+```
 
-The JavaScript injected by WhaRa runs inside the loaded WhatsApp Web document. The native shell provides window management, preferences, tray integration, zoom, notifications, and startup behavior. **It does not replace WhatsApp Web's transport or messaging implementation.**
-
-Most UI customization can be disabled independently at runtime for debugging:
-
-~~~js
-__wharaUi.setEnabled('compact', false);
-__wharaUi.setEnabled('lists', false);
-__wharaUi.setEnabled('calls', false);
-// __wharaUi.destroy(); // remove the injected UI layer
-~~~
-
-These flags reset when the app restarts.
+WhaRa does **not** log in through an unofficial WhatsApp API or proxy messages through a custom server. It embeds the website. The injected UI follows that website's evolving markup and cannot guarantee every native WhatsApp feature will be available in WKWebView.
 
 ### Project layout
 
-~~~text
-prefs/index.html                   Native settings interface
-prefs/update.html                  Local Update / Later popup and progress UI
-scripts/make-icons.py              App / tray icon generator
-scripts/make-updater-manifest.py    GitHub Releases signed updater manifest
-src-tauri/src/                     Rust shell, signed updater, tray, preferences
-src-tauri/resources/whara-inject.js Notification / privacy bridge
-src-tauri/resources/whara-ui.js     Compact layout + WhatsApp UI proxies
-src-tauri/capabilities/            Tauri permissions
-src-tauri/icons/                   App and tray icons
-docs/screenshots/                  Privacy-safe demonstration screenshots
-~~~
+```text
+prefs/                         Preferences + Update / Later window
+src-tauri/src/                 Native Rust shell, tray, updater, settings
+src-tauri/resources/           JavaScript injected into WhatsApp Web
+src-tauri/capabilities/        Tauri command permissions
+src-tauri/icons/               App and menu-bar icons
+docs/screenshots/              Synthetic, privacy-safe screenshots
+scripts/                       Build helpers and updater-manifest tests
+.github/workflows/             CI and macOS release builds
+```
 
-## Tests
+### Maintainers: publishing releases
 
-~~~bash
-cargo test --manifest-path src-tauri/Cargo.toml
-cargo fmt --manifest-path src-tauri/Cargo.toml --check
-~~~
+A `vX.Y.Z` tag runs GitHub Actions to test and build DMG, `.app.zip`, **signed updater archives** (Apple Silicon and Intel), SHA-256 checksums, and the `latest.json` update feed.
 
-The injected JavaScript can also be checked with a JavaScript parser. Runtime UI behavior should be verified on macOS because WhatsApp Web updates its private DOM independently of this project.
+The updater's **public** signing key is in the Tauri config. The **private** key must never be committed or uploaded as a release asset; CI uses the repository Actions secret `TAURI_SIGNING_PRIVATE_KEY`. Keep a secure backup of the original key because existing installs trust it for future updates.
 
-## Limitations and privacy
+Update the version in both `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` before pushing a matching release tag. The workflow publishes downloads only after both architecture builds succeed.
 
-- WhatsApp Web is a changing third-party website. Internal DOM selectors and layout behavior can change without notice, so compact UI enhancements may need maintenance.
-- Calling and other WhatsApp features depend on what the underlying WhatsApp Web session and WKWebView support.
-- WhaRa is **not** a separate WhatsApp service and does not provide an unofficial messaging API.
-- Both README screenshots are **staged, illustrative UI previews**; the compact list uses synthetic contacts and the *Stella (You)* conversation uses synthetic messages. Neither contains actual account conversations or contacts.
+## Privacy, scope & limitations
+
+- The screenshots above are **entirely synthetic** and do not show real contacts or messages.
+- WhatsApp Web is a third-party website; messages, login, and session behavior remain subject to WhatsApp's service and policies.
+- WhaRa changes the web UI and integrates macOS features; it does not replace the WhatsApp protocol.
+- UI selectors, media views, and responsive layout may need maintenance when WhatsApp updates its website.
+- WhaRa currently targets **macOS only**.
 
 ## License
 
