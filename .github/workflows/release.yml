@@ -1,0 +1,150 @@
+name: macOS Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Validate version and tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Match Git tag to app version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, re, sys
+          cargo = pathlib.Path("src-tauri/Cargo.toml").read_text()
+          match = re.search(r'(?m)^version\s*=\s*"([^"]+)"', cargo)
+          tauri = json.loads(pathlib.Path("src-tauri/tauri.conf.json").read_text())
+          version = match.group(1) if match else None
+          assert version and tauri["version"] == version, "Cargo and Tauri versions differ"
+          assert os.environ["RELEASE_TAG"] == f"v{version}", "Release tag does not match version"
+          print(f"Release version: {version}")
+          PY
+      - name: Rust formatting and tests
+        run: |
+          cargo fmt --manifest-path src-tauri/Cargo.toml --check
+          cargo test --locked --manifest-path src-tauri/Cargo.toml
+      - name: Install Node for JavaScript syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check injected JavaScript
+        run: |
+          node --check src-tauri/resources/whara-inject.js
+          node --check src-tauri/resources/whara-ui.js
+
+  build:
+    name: Build macOS (${{ matrix.arch }})
+    needs: verify
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: apple-silicon
+            target: aarch64-apple-darwin
+          - arch: intel
+            target: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Install Tauri CLI v2
+        run: cargo install tauri-cli --version '^2' --locked
+
+      - name: Build native macOS app and DMG
+        env:
+          CI: "true" # Tauri skips Finder AppleScript DMG customization in CI
+          APPLE_SIGNING_IDENTITY: "-"
+          WHARA_REPOSITORY: rayenking/WhaRa
+          TARGET: ${{ matrix.target }}
+        run: |
+          cargo tauri build --ci --config src-tauri/tauri.conf.json --target "$TARGET" --bundles app,dmg
+
+      - name: Prepare named downloads
+        env:
+          ARCH: ${{ matrix.arch }}
+          TARGET: ${{ matrix.target }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          dmg="$(find "target/$TARGET/release/bundle/dmg" -maxdepth 1 -name '*.dmg' -print -quit)"
+          app="target/$TARGET/release/bundle/macos/WhaRa.app"
+          test -n "$dmg"
+          test -f "$dmg"
+          test -d "$app"
+          codesign --verify --deep --strict "$app"
+          mkdir -p release-assets
+          cp "$dmg" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.dmg"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.app.zip"
+          ls -lh release-assets
+
+      - name: Upload build downloads
+        uses: actions/upload-artifact@v4
+        with:
+          name: whara-macos-${{ matrix.arch }}
+          path: release-assets/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish downloads to GitHub Releases
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download both architecture builds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: whara-macos-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Check assets and generate SHA-256 checksums
+        run: |
+          set -euo pipefail
+          test "$(find release-assets -maxdepth 1 -name '*.dmg' | wc -l)" -eq 2
+          test "$(find release-assets -maxdepth 1 -name '*.app.zip' | wc -l)" -eq 2
+          cd release-assets
+          sha256sum *.dmg *.app.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish (or update) GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --verify-tag \
+              --title "WhaRa ${RELEASE_TAG}" \
+              --generate-notes \
+              --notes "macOS downloads for Apple Silicon and Intel. Choose the DMG matching your Mac. These builds are ad-hoc signed, not Apple-notarized; macOS may require confirmation under System Settings > Privacy & Security. WhaRa embeds the original WhatsApp Web with UI injection; no unofficial WhatsApp client library."
+          fi

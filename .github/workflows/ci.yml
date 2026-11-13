@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Rust tests & injected JS
+    runs-on: macos-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
+
+      - name: Test Rust workspace
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: Install Node for JavaScript syntax checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Check injected JavaScript
+        run: |
+          node --check src-tauri/resources/whara-inject.js
+          node --check src-tauri/resources/whara-ui.js

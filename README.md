@@ -5,11 +5,24 @@ Rust · Tauri 2 · WKWebView · macOS 12+
 
 WhaRa keeps the familiar WhatsApp Web experience and adds a macOS-friendly shell, a compact single-pane layout, and a few convenient UI controls. It is built for people who want to use WhatsApp Web in its own desktop window without Electron.
 
-<p align="center">
-  <img src="docs/screenshots/compact-stella-demo.png" alt="WhaRa compact mode, showing a synthetic Stella (You) demo conversation" width="335">
-</p>
+| Compact chat list | Compact conversation |
+| :---: | :---: |
+| <img src="docs/screenshots/compact-chat-list-demo.png" alt="WhaRa compact chat list with synthetic contacts, chat previews and unread counts" width="300"> | <img src="docs/screenshots/compact-stella-demo.png" alt="WhaRa compact Stella (You) conversation with synthetic demo messages" width="300"> |
 
-<p align="center"><sub>Compact mode (470 × 740 window). All names, avatars, messages, and counts in this staged screenshot are <strong>synthetic demo data</strong> — no personal conversations are shown.</sub></p>
+<p align="center"><sub>Compact mode (470 × 740 window). Both screenshots are staged illustrative previews. <strong>All names, avatars, messages, timestamps and unread counts are synthetic</strong> — no private conversations or contacts are published.</sub></p>
+
+## Download for macOS
+
+**[Download the latest WhaRa release](https://github.com/rayenking/WhaRa/releases/latest)** — no Rust toolchain or manual build required.
+
+Choose the installer that matches your Mac:
+
+- **Apple Silicon (M1/M2/M3/M4/...)**: `WhaRa_vX.Y.Z_apple-silicon.dmg`
+- **Intel Mac**: `WhaRa_vX.Y.Z_intel.dmg`
+
+Open the downloaded DMG and drag **WhaRa.app** into Applications. A zipped `.app` is also provided for each architecture, along with SHA-256 checksums.
+
+**macOS security notice:** Current downloads use **ad-hoc signatures, not Apple Developer ID notarization**. macOS Gatekeeper may ask you to approve opening the app in **System Settings → Privacy & Security**. Only download from the repository's official Releases page and verify the checksum if desired.
 
 ## Original WhatsApp Web — not an unofficial WhatsApp library
 
@@ -78,7 +91,18 @@ To create a macOS app bundle on your own machine:
 cargo tauri build --config src-tauri/tauri.conf.json
 ~~~
 
-**Note:** The GitHub source repository does not ship a prebuilt release bundle. A packaged app or DMG may be published separately after release testing.
+## CI/CD and releases
+
+GitHub Actions runs formatting checks, the Rust test suite and injected-JavaScript syntax checks on updates to `main` and pull requests. When a `vX.Y.Z` Git tag is pushed, the release workflow:
+
+1. Confirms the Git tag matches both Tauri and Cargo package versions.
+2. Builds native macOS DMGs for **Apple Silicon** and **Intel**.
+3. Packages the matching `.app` as a ZIP for each architecture.
+4. Publishes all four downloads and a `SHA256SUMS.txt` file in [GitHub Releases](https://github.com/rayenking/WhaRa/releases) after both builds pass.
+
+To publish the next version, update the matching version fields in `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, then create and push a tag like `v0.2.0`. GitHub Actions handles the rest.
+
+This is downloadable distribution, **not an automatic in-app updater**. The workflow does not require Apple signing credentials because it uses ad-hoc signing.
 
 ## How it works
 
@@ -130,7 +154,7 @@ The injected JavaScript can also be checked with a JavaScript parser. Runtime UI
 - WhatsApp Web is a changing third-party website. Internal DOM selectors and layout behavior can change without notice, so compact UI enhancements may need maintenance.
 - Calling and other WhatsApp features depend on what the underlying WhatsApp Web session and WKWebView support.
 - WhaRa is **not** a separate WhatsApp service and does not provide an unofficial messaging API.
-- The README screenshot is a **staged, illustrative UI preview** containing only synthetic messages in *Stella (You)*. It is not a capture of anyone's real messages or contact list.
+- Both README screenshots are **staged, illustrative UI previews**; the compact list uses synthetic contacts and the *Stella (You)* conversation uses synthetic messages. Neither contains actual account conversations or contacts.
 
 ## License
 
