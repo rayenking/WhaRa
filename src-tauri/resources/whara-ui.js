@@ -166,21 +166,22 @@
     #whara-call-menu {
       position: fixed;
       z-index: 10000;
-      min-width: 176px;
-      padding: 6px;
-      border: 1px solid var(--border-default, rgba(140,140,140,.2));
+      box-sizing: border-box;
+      width: 144px;
+      padding: 5px;
+      border: 1px solid rgba(140,140,140,.18);
       border-radius: 10px;
-      background: var(--dropdown-background, #202c33);
+      background: var(--panel-header-background, #202c33);
       color: var(--primary-strong, #f0f2f5);
       box-shadow: 0 6px 24px rgba(0,0,0,.24);
     }
     #whara-call-menu button {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 9px;
       box-sizing: border-box;
       width: 100%;
-      padding: 11px 12px;
+      padding: 9px 10px;
       border: 0;
       border-radius: 6px;
       text-align: start;
@@ -489,6 +490,17 @@
             if (original?.isConnected && !original.disabled) original.click();
           });
           menu.append(option);
+        }
+        // Use the actual WhatsApp chat-header background (not the bluer
+        // dropdown token), so this matches the active WhatsApp theme.
+        const header = document.querySelector("#main header");
+        for (let node = header; node; node = node.parentElement) {
+          const background = getComputedStyle(node).backgroundColor;
+          if (background && background !== "transparent" &&
+              background !== "rgba(0, 0, 0, 0)") {
+            menu.style.backgroundColor = background;
+            break;
+          }
         }
         document.body.append(menu);
         const r = callButton.getBoundingClientRect();
