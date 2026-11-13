@@ -2,6 +2,8 @@
 
 mod bridge;
 mod config;
+#[cfg(all(debug_assertions, target_os = "macos"))]
+mod dev_bridge;
 mod hotkeys;
 mod notify;
 mod refresh;
@@ -65,6 +67,8 @@ fn prepare(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     config::bootstrap(&handle)?;
     shell::mount_chat(&handle)?;
+    #[cfg(all(debug_assertions, target_os = "macos"))]
+    dev_bridge::start(&handle)?;
     tray::register_tray(&handle)?;
     bridge::push_stored_state(&handle);
 

@@ -169,6 +169,21 @@ python3 -m unittest discover -s scripts -p 'test_*.py'
 
 WhatsApp Web owns its DOM and may change it over time, so compact layout changes should also be checked in a running macOS WKWebView.
 
+### UI development without Web Inspector
+
+Debug builds provide a **private local Unix-socket bridge** that lets contributors inspect DOM geometry, switch WhatsApp sidebar sections, test CSS, and hot-reload `whara-ui.js` from the terminal. The debug tool does not open DevTools automatically, and it is **excluded from release builds**.
+
+```sh
+cargo build --manifest-path src-tauri/Cargo.toml
+./target/debug/whara
+
+python3 scripts/whara-dev.py inspect
+python3 scripts/whara-dev.py nav Settings
+python3 scripts/whara-dev.py reload-ui
+```
+
+Read the full command list and privacy precautions in [UI Development](docs/DEVELOPMENT.md). Never share real chat contents or session tokens from an active development account.
+
 ## How it works
 
 ```text

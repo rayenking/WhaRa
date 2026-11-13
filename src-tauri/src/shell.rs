@@ -109,11 +109,8 @@ pub fn mount_chat(app: &AppHandle) -> tauri::Result<WebviewWindow> {
 
     let panel = builder.build()?;
 
-    // Keep Web Inspector available while iterating on the remote WhatsApp DOM.
-    // Do not expose it in release builds.
-    #[cfg(debug_assertions)]
-    panel.open_devtools();
-
+    // DevTools stay closed by default, including debug builds.
+    // Development inspection uses the local-only CLI bridge instead.
     Ok(panel)
 }
 

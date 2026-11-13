@@ -25,6 +25,11 @@
   let listButton = null;
   let callButton = null;
   let menu = null;
+  let mediaHost = null;
+  let mediaHeader = null;
+  let mediaTrigger = null;
+  let mediaMenu = null;
+  let mediaSearchCancel = null;
   let interval = null;
   let stopped = false;
 
@@ -58,6 +63,242 @@
       min-width: 0 !important;
       max-width: 100% !important;
     }
+    /* Non-chat rail sections (Calls, Status, Channels, Communities and
+       Settings) use WhatsApp's fullscreen drawer. In compact mode its
+       left column remains capped at 45%, leaving the list and Settings
+       cramped beside an empty middle column. Expand only a populated left
+       column; the empty Chats drawer and native desktop layout stay intact. */
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid]) {
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      border-inline: 0 !important;
+      box-shadow: none !important;
+    }
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid]) > * {
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    /* Empty-state content in the second column is desktop-only. Hide it
+       rather than letting it steal room from Calls/Settings/etc. */
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid])
+      ~ [data-testid="drawer-middle"]:has([data-testid="empty-state-drawer"]) {
+      display: none !important;
+    }
+    /* If a real detail view replaces the empty state, keep WhatsApp's
+       actual content and handlers, but present it as a full-width overlay
+       instead of squeezing both columns into 406px. */
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid])
+      ~ [data-testid="drawer-middle"]:not(:has([data-testid="empty-state-drawer"])) {
+      position: absolute !important;
+      inset: 0 !important;
+      display: block !important;
+      flex: 0 0 100% !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      z-index: 350 !important;
+    }
+    /* A populated third pane (e.g. native account/contact details opened
+       from a sidebar section) is another desktop split. Keep its own Close
+       and Back actions but give the details the entire compact content area. */
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid])
+      ~ [data-testid="drawer-right"]:has([data-testid]) {
+      position: fixed !important;
+      inset-block: 0 !important;
+      left: var(--whara-content-left, 64px) !important;
+      right: 0 !important;
+      flex: 0 0 auto !important;
+      width: calc(100vw - var(--whara-content-left, 64px)) !important;
+      min-width: 0 !important;
+      max-width: calc(100vw - var(--whara-content-left, 64px)) !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+      transform: none !important;
+      z-index: 1100 !important;
+    }
+    html.whara-compact #app [data-testid="drawer-left"]:has([data-testid])
+      ~ [data-testid="drawer-right"]:has([data-testid]) > * {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    /* The floating Back-to-chats button belongs to a selected conversation,
+       not the rail's Settings/Calls/etc. Avoid placing it over a drawer. */
+    html.whara-compact:has(#app [data-testid="drawer-left"] [data-testid]) #whara-back {
+      display: none !important;
+    }
+    /* Media rail button opens a separate native modal with a hard 748px
+       dialog / 700px content minimum. Keep that portal inside the compact
+       viewport instead of clipping the Media, Docs and Links tabs. */
+    html.whara-compact #app [role="dialog"]:has([data-testid="media-hub-modal"]) {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100vw !important;
+    }
+    html.whara-compact #app [data-testid="media-hub-modal"] {
+      flex: 0 1 auto !important;
+      width: calc(100vw - 24px) !important;
+      min-width: 0 !important;
+      max-width: calc(100vw - 24px) !important;
+      max-height: calc(100vh - 28px) !important;
+    }
+    html.whara-compact #app [data-testid="media-hub-modal"] > * {
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    /* Media / Docs / Links are a dropdown only in compact view. Keep
+       WhatsApp's real tablist in the DOM, so each option still calls its
+       native React handler. Avoid the 210px tab strip colliding with
+       Search, Sort, Select and Close on a 470px window. */
+    html.whara-compact #app [data-whara-media-header] > :first-child {
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+    }
+    html.whara-compact #app [data-whara-media-header] > :last-child {
+      flex: 0 0 184px !important;
+      width: 184px !important;
+      min-width: 184px !important;
+      max-width: 184px !important;
+    }
+    html.whara-compact #app [data-whara-media-tabs-host] {
+      display: flex !important;
+      align-self: center !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex: 0 0 94px !important;
+      width: 94px !important;
+      min-width: 94px !important;
+      max-width: 94px !important;
+      overflow: visible !important;
+    }
+    html.whara-compact #app [data-whara-media-tabs-host] > [role="tablist"] {
+      display: none !important;
+    }
+    #whara-media-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 38px;
+      box-sizing: border-box;
+      max-width: 94px;
+      padding: 0 7px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--primary-strong, #f0f2f5);
+      font: 500 14px system-ui, sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    #whara-media-trigger:hover,
+    #whara-media-trigger:focus-visible {
+      background: var(--background-default-hover, rgba(120,130,140,.18));
+    }
+    #whara-media-trigger .whara-media-caret { font-size: 11px; }
+    #whara-media-menu {
+      position: fixed;
+      z-index: 10005;
+      box-sizing: border-box;
+      width: 130px;
+      padding: 5px;
+      border: 1px solid rgba(140,140,140,.18);
+      border-radius: 10px;
+      color: var(--primary-strong, #f0f2f5);
+      background: var(--panel-header-background, #202c33);
+      box-shadow: 0 6px 24px rgba(0,0,0,.24);
+    }
+    #whara-media-menu button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 36px;
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 6px;
+      color: inherit;
+      background: transparent;
+      font: 14px system-ui, sans-serif;
+      text-align: start;
+      cursor: pointer;
+    }
+    #whara-media-menu button[aria-checked="true"],
+    #whara-media-menu button:hover,
+    #whara-media-menu button:focus-visible {
+      background: var(--background-default-hover, rgba(120,130,140,.18));
+    }
+    /* While WhatsApp's native Media search is open, the title, category
+       dropdown, Sort/Select and modal Close should yield their space.
+       The native search (including its own clear/close control) then spans
+       the full compact header. Never move/recreate the React search input. */
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search] {
+      position: relative !important;
+      min-height: 65px !important;
+      width: 100% !important;
+    }
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search] > :first-child,
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search]
+      > [data-whara-media-tabs-host] {
+      display: none !important;
+    }
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search] > :last-child {
+      position: absolute !important;
+      inset: 8px 16px !important;
+      display: flex !important;
+      flex: 1 1 100% !important;
+      width: auto !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      height: 48px !important;
+      align-items: center !important;
+    }
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search]
+      > :last-child > :not(:first-child) {
+      display: none !important;
+    }
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search]
+      > :last-child > :first-child,
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search]
+      > :last-child > :first-child :has(input[role="textbox"]) {
+      position: relative !important;
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+    html.whara-compact #app [data-whara-media-header][data-whara-media-search]
+      input[role="textbox"] {
+      box-sizing: border-box !important;
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      padding-right: 36px !important;
+    }
+    #whara-media-search-close {
+      position: absolute;
+      z-index: 1;
+      top: 4px;
+      right: 6px;
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--primary-strong, #f0f2f5);
+      cursor: pointer;
+      font: 24px system-ui, sans-serif;
+    }
+    #whara-media-search-close:hover,
+    #whara-media-search-close:focus-visible {
+      background: var(--background-default-hover, rgba(120,130,140,.18));
+    }
+    #whara-media-search-close svg { width: 20px; height: 20px; }
     /* WhatsApp keeps a fullscreen drawer with its own desktop split layout
        even in compact chat mode. Its left/middle panes carry 1px dividers. */
     html.whara-compact-chat #app [data-testid="drawer-fullscreen"] {
@@ -546,6 +787,180 @@
     voice.classList.add("whara-native-action-hidden");
   }
 
+  const MEDIA_TABS = [
+    ["Media", "tab-media"],
+    ["Docs", "tab-docs"],
+    ["Links", "tab-links"],
+  ];
+
+  function closeMediaMenu(focusTrigger = false) {
+    mediaMenu?.remove();
+    mediaMenu = null;
+    mediaTrigger?.setAttribute("aria-expanded", "false");
+    if (focusTrigger) mediaTrigger?.focus();
+  }
+
+  function unmountMediaTabs() {
+    closeMediaMenu();
+    mediaSearchCancel?.remove();
+    mediaHost?.removeAttribute("data-whara-media-tabs-host");
+    mediaHeader?.removeAttribute("data-whara-media-search");
+    mediaHeader?.removeAttribute("data-whara-media-header");
+    mediaTrigger?.remove();
+    mediaHost = null;
+    mediaHeader = null;
+  }
+
+  function selectedMediaTab(modal) {
+    const selected = MEDIA_TABS.find(([, id]) =>
+      modal.querySelector('[data-testid="' + id + '"]')?.getAttribute("aria-selected") === "true");
+    return selected || MEDIA_TABS[0];
+  }
+
+  function placeMediaMenu() {
+    if (!mediaMenu?.isConnected || !mediaTrigger?.isConnected) return;
+    const rect = mediaTrigger.getBoundingClientRect();
+    mediaMenu.style.left = Math.max(8,
+      Math.min(innerWidth - mediaMenu.offsetWidth - 8, rect.left)) + "px";
+    mediaMenu.style.top = Math.max(8,
+      Math.min(innerHeight - mediaMenu.offsetHeight - 8, rect.bottom + 5)) + "px";
+  }
+
+  function openMediaMenu() {
+    if (!mediaTrigger?.isConnected) return;
+    if (mediaMenu) {
+      closeMediaMenu();
+      return;
+    }
+    const modal = mediaTrigger.closest('[data-testid="media-hub-modal"]');
+    if (!modal) return;
+    closeMenu();
+    const selected = selectedMediaTab(modal)[1];
+    const popup = document.createElement("div");
+    popup.id = "whara-media-menu";
+    popup.setAttribute("role", "menu");
+    popup.setAttribute("aria-label", "Media categories");
+    for (const [label, testid] of MEDIA_TABS) {
+      const original = modal.querySelector('[data-testid="' + testid + '"]');
+      if (!original) continue;
+      const option = document.createElement("button");
+      option.type = "button";
+      option.setAttribute("role", "menuitemradio");
+      option.setAttribute("aria-checked", String(testid === selected));
+      option.textContent = label;
+      option.addEventListener("click", () => {
+        closeMediaMenu();
+        // Call WhatsApp's original tab handler; never replace its React content.
+        const live = modal.querySelector('[data-testid="' + testid + '"]');
+        if (live?.isConnected) live.click();
+        requestAnimationFrame(syncMediaTabs);
+      });
+      popup.append(option);
+    }
+    if (!popup.childElementCount) return;
+    // The Media header itself is transparent; the modal owns its real
+    // background color. Match it instead of using the bluer dropdown token.
+    const background = getComputedStyle(modal).backgroundColor;
+    if (background && background !== "transparent" &&
+        background !== "rgba(0, 0, 0, 0)") {
+      popup.style.backgroundColor = background;
+    }
+    document.body.append(popup);
+    mediaMenu = popup;
+    mediaTrigger.setAttribute("aria-expanded", "true");
+    placeMediaMenu();
+    popup.querySelector('[aria-checked="true"]')?.focus();
+  }
+
+  function syncMediaTabs() {
+    const modal = document.querySelector('#app [data-testid="media-hub-modal"]');
+    const nativeTab = modal?.querySelector('[data-testid="tab-media"]');
+    const tabList = nativeTab?.closest('[role="tablist"]');
+    const host = tabList?.parentElement;
+    const header = host?.parentElement;
+    if (!document.documentElement.classList.contains("whara-compact") ||
+        !modal || !host || !header ||
+        !MEDIA_TABS.every(([, id]) => modal.querySelector('[data-testid="' + id + '"]'))) {
+      if (mediaHost || mediaTrigger?.isConnected || mediaMenu) unmountMediaTabs();
+      return;
+    }
+
+    if (!mediaTrigger) {
+      mediaTrigger = document.createElement("button");
+      mediaTrigger.type = "button";
+      mediaTrigger.id = "whara-media-trigger";
+      mediaTrigger.title = "Choose Media, Docs or Links";
+      mediaTrigger.setAttribute("aria-label", "Choose media category");
+      mediaTrigger.setAttribute("aria-haspopup", "menu");
+      mediaTrigger.setAttribute("aria-expanded", "false");
+      const label = document.createElement("span");
+      label.className = "whara-media-label";
+      const caret = document.createElement("span");
+      caret.className = "whara-media-caret";
+      caret.setAttribute("aria-hidden", "true");
+      caret.textContent = "▾";
+      mediaTrigger.replaceChildren(label, caret);
+      mediaTrigger.addEventListener("click", openMediaMenu);
+      mediaTrigger.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown" || event.key === "Enter" && !mediaMenu) {
+          event.preventDefault();
+          if (!mediaMenu) openMediaMenu();
+        }
+      });
+    }
+    if (mediaHost !== host || mediaHeader !== header) {
+      unmountMediaTabs();
+      mediaHost = host;
+      mediaHeader = header;
+    }
+    if (!mediaTrigger.isConnected || mediaTrigger.parentElement !== host) {
+      host.append(mediaTrigger);
+    }
+    host.setAttribute("data-whara-media-tabs-host", "");
+    header.setAttribute("data-whara-media-header", "");
+    // WhatsApp mounts this textbox only while the native search is active.
+    // Drive the expansion from actual DOM state, not focus or user typing.
+    const searchInput = header.querySelector('input[role="textbox"]');
+    const searching = !!searchInput;
+    header.toggleAttribute("data-whara-media-search", searching);
+    if (searching && mediaMenu) closeMediaMenu();
+    if (searching) {
+      const nativeSearch = header.lastElementChild?.firstElementChild;
+      if (!mediaSearchCancel) {
+        mediaSearchCancel = document.createElement("button");
+        mediaSearchCancel.type = "button";
+        mediaSearchCancel.id = "whara-media-search-close";
+        mediaSearchCancel.setAttribute("aria-label", "Close media search");
+        const closeIcon = modal.querySelector('button[aria-label="Close"] svg')?.cloneNode(true);
+        if (closeIcon) {
+          closeIcon.setAttribute("aria-hidden", "true");
+          mediaSearchCancel.append(closeIcon);
+        } else {
+          mediaSearchCancel.textContent = "×";
+        }
+        mediaSearchCancel.addEventListener("click", () => {
+          // Let WhatsApp close its own native search. Escape is handled by
+          // the original input (rather than altering React-managed state).
+          const input = mediaHeader?.querySelector('input[role="textbox"]');
+          if (!input) return;
+          input.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Escape", code: "Escape", bubbles: true, cancelable: true,
+          }));
+          requestAnimationFrame(syncMediaTabs);
+        });
+      }
+      if (nativeSearch && mediaSearchCancel.parentElement !== nativeSearch) {
+        nativeSearch.append(mediaSearchCancel);
+      }
+    } else {
+      mediaSearchCancel?.remove();
+    }
+    const [label] = selectedMediaTab(modal);
+    const text = mediaTrigger.querySelector(".whara-media-label");
+    if (text && text.textContent !== label) text.textContent = label;
+    placeMediaMenu();
+  }
+
   function onPageClick(event) {
     // The compact back button hides #main but does not close WhatsApp's
     // conversation. A chat-row click restores conversation mode.
@@ -554,9 +969,18 @@
       queueMicrotask(sync);
     }
     if (state.menuOpen && !event.target.closest?.("#whara-call, #whara-call-menu")) closeMenu();
+    if (mediaMenu && !event.target.closest?.("#whara-media-trigger, #whara-media-menu")) {
+      closeMediaMenu();
+    }
   }
 
   function onKey(event) {
+    if (event.key === "Escape" && mediaMenu) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMediaMenu(true);
+      return;
+    }
     if (event.key === "Escape") closeMenu();
     if ((event.key === "Enter" || event.key === " ") &&
         document.activeElement?.closest?.('#pane-side [role="gridcell"]')) {
@@ -572,6 +996,7 @@
     profileDrawer();
     listAction();
     callAction();
+    syncMediaTabs();
     syncActionColors();
     positionListMenu();
   }
@@ -609,6 +1034,7 @@
     document.removeEventListener("click", onPageClick, true);
     document.removeEventListener("keydown", onKey, true);
     closeMenu();
+    unmountMediaTabs();
     clearCompact();
     state.lastSide?.parentElement?.removeAttribute("data-whara-pane");
     state.lastMain?.parentElement?.removeAttribute("data-whara-pane");
