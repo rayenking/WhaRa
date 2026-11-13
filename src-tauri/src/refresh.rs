@@ -1,9 +1,6 @@
-//! Update checking against the public GitHub release feed.
-//!
-//! WhaRa never replaces its own bundle. It compares the running version with
-//! the newest published release, remembers what the user was already told
-//! about, and hands the release page to the browser so the download and the
-//! swap stay in the user's hands.
+//! Legacy GitHub release-feed metadata for the Preferences release link.
+//! Signed in-app installation and periodic checks live in `updates.rs`.
+//! The WhatsApp page is not granted access to either updater workflow.
 
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime};
@@ -13,9 +10,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::release;
 
-/// How long to wait after launch before the first automatic check.
-const FIRST_CHECK: Duration = Duration::from_secs(45);
-/// Interval between automatic checks while the app stays open.
+/// Cache duration used by the legacy on-demand release-feed lookup.
 const CHECK_INTERVAL: Duration = Duration::from_secs(6 * 60 * 60);
 
 /// What the preferences page shows about updates.
@@ -264,17 +259,4 @@ pub fn open_page(url: &str) -> Result<(), String> {
         .spawn()
         .map(|_| ())
         .map_err(|err| err.to_string())
-}
-
-/// Background loop: first check shortly after launch, then every few hours.
-pub fn schedule(app: AppHandle) {
-    std::thread::spawn(move || {
-        std::thread::sleep(FIRST_CHECK);
-        loop {
-            if let Err(reason) = check(&app, false) {
-                eprintln!("[whara] update check failed: {reason}");
-            }
-            std::thread::sleep(CHECK_INTERVAL);
-        }
-    });
 }

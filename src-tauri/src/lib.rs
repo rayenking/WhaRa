@@ -9,6 +9,7 @@ mod release;
 mod shell;
 mod startup;
 mod tray;
+mod updates;
 
 use tauri::Manager as Registry;
 use tauri_plugin_global_shortcut::ShortcutState;
@@ -28,6 +29,7 @@ pub fn launch() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(shortcuts)
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(prepare)
         .on_window_event(watch_window)
         .invoke_handler(tauri::generate_handler![
@@ -42,6 +44,10 @@ pub fn launch() {
             bridge::update_status,
             bridge::check_update,
             bridge::open_release,
+            updates::updater_state,
+            updates::updater_check_now,
+            updates::updater_later,
+            updates::updater_install,
             notify::push_notice,
         ])
         .build(tauri::generate_context!())
@@ -63,7 +69,8 @@ fn prepare(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     bridge::push_stored_state(&handle);
 
     refresh::bootstrap(&handle)?;
-    refresh::schedule(handle.clone());
+    updates::bootstrap(&handle);
+    updates::schedule(handle.clone());
 
     let hotkey = config::snapshot(&handle).blur_hotkey;
     if let Err(reason) = hotkeys::assign(&handle, &hotkey) {
@@ -93,15 +100,21 @@ fn fire_shortcut(
 }
 
 fn watch_window(win: &tauri::Window, event: &tauri::WindowEvent) {
-    if win.label() != shell::CHAT {
-        return;
-    }
-
     let tauri::WindowEvent::CloseRequested { api, .. } = event else {
         return;
     };
 
-    if config::snapshot(win.app_handle()).keep_running_on_close {
+    if win.label() == updates::WINDOW {
+        // Don't dismiss the progress UI in the middle of an installation.
+        if updates::updater_installing(win.app_handle()) {
+            api.prevent_close();
+        } else if let Err(reason) = updates::remember_later(win.app_handle()) {
+            eprintln!("[whara] cannot remember deferred update: {reason}");
+        }
+        return;
+    }
+
+    if win.label() == shell::CHAT && config::snapshot(win.app_handle()).keep_running_on_close {
         api.prevent_close();
         win.hide().ok();
     }

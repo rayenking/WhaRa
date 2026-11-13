@@ -74,13 +74,18 @@ jobs:
       - name: Install Tauri CLI v2
         run: cargo install tauri-cli --version '^2' --locked
 
-      - name: Build native macOS app and DMG
+      - name: Build native macOS app, DMG and signed updater
         env:
-          CI: "true" # Tauri skips Finder AppleScript DMG customization in CI
+          CI: "true"
           APPLE_SIGNING_IDENTITY: "-"
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           WHARA_REPOSITORY: rayenking/WhaRa
           TARGET: ${{ matrix.target }}
         run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::Add TAURI_SIGNING_PRIVATE_KEY in repository Actions secrets before releasing."
+            exit 1
+          fi
           cargo tauri build --ci --config src-tauri/tauri.conf.json --target "$TARGET" --bundles app,dmg
 
       - name: Prepare named downloads
@@ -96,9 +101,15 @@ jobs:
           test -f "$dmg"
           test -d "$app"
           codesign --verify --deep --strict "$app"
+          updater="$(find "target/$TARGET/release/bundle/macos" -maxdepth 1 -name '*.app.tar.gz' -print -quit)"
+          test -n "$updater"
+          test -s "$updater"
+          test -s "$updater.sig"
           mkdir -p release-assets
           cp "$dmg" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.dmg"
           ditto -c -k --sequesterRsrc --keepParent "$app" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.app.zip"
+          cp "$updater" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.app.tar.gz"
+          cp "$updater.sig" "release-assets/WhaRa_${RELEASE_TAG}_${ARCH}.app.tar.gz.sig"
           ls -lh release-assets
 
       - name: Upload build downloads
@@ -123,13 +134,22 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Check assets and generate SHA-256 checksums
+      - uses: actions/checkout@v4
+
+      - name: Create verified update manifest and SHA-256 checksums
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           test "$(find release-assets -maxdepth 1 -name '*.dmg' | wc -l)" -eq 2
           test "$(find release-assets -maxdepth 1 -name '*.app.zip' | wc -l)" -eq 2
+          test "$(find release-assets -maxdepth 1 -name '*.app.tar.gz' | wc -l)" -eq 2
+          test "$(find release-assets -maxdepth 1 -name '*.app.tar.gz.sig' | wc -l)" -eq 2
+          python3 scripts/make-updater-manifest.py \
+            --assets release-assets --tag "$RELEASE_TAG" --repository "$REPOSITORY"
           cd release-assets
-          sha256sum *.dmg *.app.zip > SHA256SUMS.txt
+          sha256sum *.dmg *.app.zip *.app.tar.gz latest.json > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Publish (or update) GitHub Release

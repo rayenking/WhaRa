@@ -1,0 +1,12 @@
+{
+  "identifier": "updates-local",
+  "description": "Only the local WhaRa updater window can approve a signed update. WhatsApp Web cannot invoke these commands.",
+  "windows": ["updates"],
+  "permissions": [
+    "core:default",
+    "allow-updater-state",
+    "allow-updater-check-now",
+    "allow-updater-later",
+    "allow-updater-install"
+  ]
+}

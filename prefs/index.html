@@ -255,7 +255,7 @@
     </div>
 
     <footer>
-      WhaRa <span id="build">0.1.0</span> ·
+      WhaRa <span id="build">0.2.0</span> ·
       <span class="stamp" id="stamp">saved</span>
     </footer>
 
@@ -352,7 +352,9 @@
           return;
         }
 
-        detail.textContent = "Checking for updates…";
+        detail.textContent = update.checked
+          ? "You are up to date."
+          : "Automatic checks run after launch and every 6 hours.";
         releaseButton.hidden = true;
       };
 
@@ -360,9 +362,21 @@
         checkButton.disabled = true;
         detail.textContent = "Checking…";
         try {
-          update = await talk("check_update");
+          const signed = await talk("updater_check_now");
+          update = {
+            current: signed.current,
+            latest: signed.latest,
+            available: signed.available,
+            checked: signed.checked,
+            error: signed.error,
+            page: signed.available ? "https://github.com/rayenking/WhaRa/releases/latest" : null
+          };
         } catch (error) {
-          detail.textContent = `Check failed: ${error}`;
+          update = {
+            current: lookup("currentVersion").textContent,
+            available: false,
+            error: String(error)
+          };
         } finally {
           checkButton.disabled = false;
           paintUpdate();
@@ -375,6 +389,18 @@
 
       globalThis.__TAURI__.event.listen("update-status", (event) => {
         update = event.payload;
+        paintUpdate();
+      });
+      globalThis.__TAURI__.event.listen("updater-state", (event) => {
+        const signed = event.payload;
+        update = {
+          current: signed.current,
+          latest: signed.latest,
+          available: signed.available,
+          checked: signed.checked,
+          error: signed.error,
+          page: signed.available ? "https://github.com/rayenking/WhaRa/releases/latest" : null
+        };
         paintUpdate();
       });
 
@@ -401,19 +427,19 @@
         }
 
         try {
-          update = await talk("update_status");
+          const signed = await talk("updater_state");
+          update = {
+            current: signed.current,
+            latest: signed.latest,
+            available: signed.available,
+            checked: signed.checked,
+            error: signed.error,
+            page: signed.available ? "https://github.com/rayenking/WhaRa/releases/latest" : null
+          };
           paintUpdate();
         } catch (error) {
-          console.error("update status failed", error);
+          console.error("signed updater state failed", error);
         }
-
-        // Refresh once on open so the panel is never stale.
-        talk("check_update")
-          .then((value) => {
-            update = value;
-            paintUpdate();
-          })
-          .catch(() => {});
       })();
     </script>
   </body>

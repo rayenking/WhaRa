@@ -20,7 +20,7 @@ Choose the installer that matches your Mac:
 - **Apple Silicon (M1/M2/M3/M4/...)**: `WhaRa_vX.Y.Z_apple-silicon.dmg`
 - **Intel Mac**: `WhaRa_vX.Y.Z_intel.dmg`
 
-Open the downloaded DMG and drag **WhaRa.app** into Applications. A zipped `.app` is also provided for each architecture, along with SHA-256 checksums.
+Open the downloaded DMG and drag **WhaRa.app** into Applications. A zipped `.app` is also provided for each architecture, along with SHA-256 checksums. **From WhaRa v0.2.0 onward, later updates can be installed directly in the app**; v0.1.0 needs a one-time manual installation of a v0.2.0-or-newer release.
 
 **macOS security notice:** Current downloads use **ad-hoc signatures, not Apple Developer ID notarization**. macOS Gatekeeper may ask you to approve opening the app in **System Settings → Privacy & Security**. Only download from the repository's official Releases page and verify the checksum if desired.
 
@@ -55,6 +55,8 @@ This is an **independent third-party macOS wrapper**, not an official WhatsApp o
 ### macOS integrations
 
 - **Native WKWebView** shell using Rust and Tauri 2 — no Electron.
+- **Verified in-app updates (v0.2.0+)**: automatic checks after launch and every six hours; a native **Update / Later** popup; download progress, signature verification, installation and automatic app restart.
+- Choosing **Later** postpones the prompt for roughly 24 hours while allowing newer versions to appear immediately. Manual checks are available in Preferences.
 - **Menu-bar / tray access** with an unread counter and quick actions.
 - **Native notifications** bridged from WhatsApp Web to macOS Notification Center.
 - **Privacy veil** that can blur chat contents when the window is not focused, with a configurable global shortcut (default: Cmd+Shift+B).
@@ -95,14 +97,21 @@ cargo tauri build --config src-tauri/tauri.conf.json
 
 GitHub Actions runs formatting checks, the Rust test suite and injected-JavaScript syntax checks on updates to `main` and pull requests. When a `vX.Y.Z` Git tag is pushed, the release workflow:
 
-1. Confirms the Git tag matches both Tauri and Cargo package versions.
-2. Builds native macOS DMGs for **Apple Silicon** and **Intel**.
-3. Packages the matching `.app` as a ZIP for each architecture.
-4. Publishes all four downloads and a `SHA256SUMS.txt` file in [GitHub Releases](https://github.com/rayenking/WhaRa/releases) after both builds pass.
+1. Confirms the Git tag matches the Cargo and Tauri versions and runs tests.
+2. Builds macOS DMGs and ZIPs for **Apple Silicon** and **Intel**.
+3. Creates a signed `.app.tar.gz` updater archive and `.sig` for each architecture.
+4. Generates `latest.json` pointing to both signed updater archives, plus a `SHA256SUMS.txt` checksum file.
+5. Publishes the installers and signed updates in [GitHub Releases](https://github.com/rayenking/WhaRa/releases), **only after both architectures pass**.
 
-To publish the next version, update the matching version fields in `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, then create and push a tag like `v0.2.0`. GitHub Actions handles the rest.
+### Maintainer: secure update signing
 
-This is downloadable distribution, **not an automatic in-app updater**. The workflow does not require Apple signing credentials because it uses ad-hoc signing.
+Tauri updater archives use a separate **minisign signature** in addition to the ad-hoc macOS app signature. The public verification key is embedded in `src-tauri/tauri.conf.json`. The private signing key must **never** be included in Git commits or downloadable artifacts.
+
+For this project, the original private key was generated locally at `~/.config/whara-updater/release.key`. Before creating the first signed GitHub release, the repository owner must add the contents of that file as a GitHub Actions repository secret named **`TAURI_SIGNING_PRIVATE_KEY`** (Settings → Secrets and variables → Actions). Keep a secure backup: losing the key prevents installed versions from trusting future updates. Do not generate a replacement key casually.
+
+Once the secret is configured, bump the versions in `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`, push changes, and push a matching `vX.Y.Z` tag. The workflow builds signed archives and a static updater manifest automatically.
+
+The app bundle still uses ad-hoc macOS code signing, so a first install may require Gatekeeper confirmation. Update signatures prevent WhaRa from silently installing unsigned or improperly signed application updates.
 
 ## How it works
 
@@ -131,8 +140,10 @@ These flags reset when the app restarts.
 
 ~~~text
 prefs/index.html                   Native settings interface
+prefs/update.html                  Local Update / Later popup and progress UI
 scripts/make-icons.py              App / tray icon generator
-src-tauri/src/                     Rust shell, tray, notifications, preferences
+scripts/make-updater-manifest.py    GitHub Releases signed updater manifest
+src-tauri/src/                     Rust shell, signed updater, tray, preferences
 src-tauri/resources/whara-inject.js Notification / privacy bridge
 src-tauri/resources/whara-ui.js     Compact layout + WhatsApp UI proxies
 src-tauri/capabilities/            Tauri permissions

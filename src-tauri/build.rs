@@ -19,6 +19,10 @@ const COMMANDS: &[&str] = &[
     "update_status",
     "check_update",
     "open_release",
+    "updater_state",
+    "updater_check_now",
+    "updater_later",
+    "updater_install",
     "push_notice",
 ];
 

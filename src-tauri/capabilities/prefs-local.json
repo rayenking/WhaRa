@@ -9,6 +9,8 @@
     "allow-build-info",
     "allow-update-status",
     "allow-check-update",
-    "allow-open-release"
+    "allow-open-release",
+    "allow-updater-check-now",
+    "allow-updater-state"
   ]
 }
