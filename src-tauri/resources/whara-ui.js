@@ -360,6 +360,61 @@
     html.whara-compact-chat #main [data-testid^="conv-msg-"] :has(> [data-testid="msg-container"]) {
       padding-inline: 10px !important;
     }
+    /* Group sender avatars are siblings of incoming bubbles. The generic
+       10px compact gutter overlaps the native 28px avatar, hiding its profile
+       hit target. Restore a separate 8px-spaced gutter only on avatar rows. */
+    html.whara-compact-chat #main
+      div:has(> div:first-child [data-testid="group-chat-profile-picture"])
+      > div:last-child [data-testid^="conv-msg-"] :has(> [data-testid="msg-container"]) {
+      padding-inline-start: 58px !important;
+      padding-inline-end: 10px !important;
+    }
+    /* The group header can be tighter without changing one-to-one chat headers. */
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"]) {
+      min-height: 58px !important;
+      height: 58px !important;
+      padding-inline-start: 49px !important;
+      padding-inline-end: 12px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-info-header"] {
+      padding-inline: 16px 8px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-info-header"] > :first-child {
+      padding-inline-end: 8px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-header-avatar"],
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-header-avatar"] > *,
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-header-avatar"] img {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      button[aria-label="Group video call"] {
+      height: 36px !important;
+      padding-inline: 8px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      > :last-child > div {
+      gap: 4px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="chat-subtitle"] {
+      font-size: 12px !important;
+      line-height: 18px !important;
+    }
+    html.whara-compact-chat #main header:has(button[aria-label="Group info"])
+      [data-testid="conversation-info-header-content"] > :first-child span {
+      font-size: 15px !important;
+      line-height: 19px !important;
+    }
+
     .whara-action {
       appearance: none;
       position: fixed;
